@@ -14,10 +14,11 @@ namespace KatieCookie.tdu
 			public float Gravity { get; set;}
 			public float NormalModeMultiplier { get; set;}
 			public bool ForceHC { get; set;}
+			public bool ForceHCRacers { get; set;}
 		}
 
 		private String FormatConfig(Config config){
-			return "Gravity: " + config.Gravity + ", NormalModeMultiplier: " + config.NormalModeMultiplier + ", ForceHC: " + config.ForceHC;
+			return "Gravity: " + config.Gravity + ", NormalModeMultiplier: " + config.NormalModeMultiplier + ", ForceHC: " + config.ForceHC + ", ForceHCRacers: " + config.ForceHCRacers;
 		}
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -34,6 +35,7 @@ namespace KatieCookie.tdu
 				config.Gravity = -9.81f;
 				config.NormalModeMultiplier = 1.0f;
 				config.ForceHC = false;
+				config.ForceHCRacers = false;
 				try{
 					var config_json_path = ModInstance.ModSetting.ModPath + "\\config.json";
 					Logger.Trace("Loading config from " + config_json_path);
@@ -86,7 +88,7 @@ namespace KatieCookie.tdu
 					0x07
 				};
 				// nop; nop; ...; mov al, [ebp + param_2], test al, al; jz ...
-				byte[] force_hc_patch_target = new byte[] {
+				byte[] force_hc_player_racer = new byte[] {
 					0x90,
 					0x90,
 					0x90,
@@ -111,7 +113,33 @@ namespace KatieCookie.tdu
 					0x74,
 					0x07
 				};
-				InstructionPatcher force_hc_patcher = new InstructionPatcher(force_hc_location, force_hc_expectation, force_hc_patch_target);
+				// nop instead of jz after the hc global variable check
+				byte[] force_hc_player_only = new byte[] {
+					0xA0,
+					0x7C,
+					0x77,
+					0x0E,
+					0x01,
+					0x84,
+					0xC0,
+					0x90,
+					0x90,
+					0x8A,
+					0x45,
+					0x18,
+					0x84,
+					0xC0,
+					0x75,
+					0x0E,
+					0x8A,
+					0x45,
+					0x1C,
+					0x84,
+					0xC0,
+					0x75,
+					0x07
+				};
+				InstructionPatcher force_hc_patcher = config.ForceHCRacers ? new InstructionPatcher(force_hc_location, force_hc_expectation, force_hc_player_racer) : new InstructionPatcher(force_hc_location, force_hc_expectation, force_hc_player_only);
 
 				_enabled = value;
 
