@@ -13,12 +13,11 @@ namespace KatieCookie.tdu
 		{
 			public float Gravity { get; set;}
 			public float NormalModeMultiplier { get; set;}
-			public bool ForceHC { get; set;}
-			public bool ForceHCRacers { get; set;}
+			public String ForceHC { get; set;}
 		}
 
 		private String FormatConfig(Config config){
-			return "Gravity: " + config.Gravity + ", NormalModeMultiplier: " + config.NormalModeMultiplier + ", ForceHC: " + config.ForceHC + ", ForceHCRacers: " + config.ForceHCRacers;
+			return "Gravity: " + config.Gravity + ", NormalModeMultiplier: " + config.NormalModeMultiplier + ", ForceHC: " + config.ForceHC;
 		}
 
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -34,8 +33,7 @@ namespace KatieCookie.tdu
 				Config config = new Config ();
 				config.Gravity = -9.81f;
 				config.NormalModeMultiplier = 1.0f;
-				config.ForceHC = false;
-				config.ForceHCRacers = false;
+				config.ForceHC = "no";
 				try{
 					var config_json_path = ModInstance.ModSetting.ModPath + "\\config.json";
 					Logger.Trace("Loading config from " + config_json_path);
@@ -139,13 +137,58 @@ namespace KatieCookie.tdu
 					0x75,
 					0x07
 				};
-				InstructionPatcher force_hc_patcher = config.ForceHCRacers ? new InstructionPatcher(force_hc_location, force_hc_expectation, force_hc_player_racer) : new InstructionPatcher(force_hc_location, force_hc_expectation, force_hc_player_only);
+				// nop all, don't check, apply hc to everything
+				byte[] force_hc_all = new byte[] {
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90,
+					0x90
+				};
+
+				byte[] selected_patch = force_hc_player_only;
+				bool force_hc = false;
+				switch (config.ForceHC) {
+				case "player_only":
+					force_hc = true;
+					break;
+				case "player_and_ai_racer":
+					force_hc = true;
+					selected_patch = force_hc_player_racer;
+					break;
+				case "all":
+					force_hc = true;
+					selected_patch = force_hc_all;
+					break;
+				default:
+					break;
+				}
+
+				InstructionPatcher force_hc_patcher = new InstructionPatcher (force_hc_location, force_hc_expectation, selected_patch);
 
 				_enabled = value;
 
 				normal_mode_patcher.Patch (value);
 				gravity_patcher.Patch (value);
-				force_hc_patcher.Patch (value && config.ForceHC);
+				force_hc_patcher.Patch (value && force_hc);
 
 				if (value){
 					Logger.Info("Enabling physics tweaks with " + FormatConfig(config));

@@ -1,6 +1,10 @@
-﻿<Properties StartupItem="tdu_andraste_gravity_plugin/tdu_andraste_physics_tweaks.csproj">
+﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="tdu_andraste_physics_tweaks/MyClass.cs">
+    <Files>
+      <File FileName="tdu_andraste_physics_tweaks/MyClass.cs" Line="170" Column="22" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
